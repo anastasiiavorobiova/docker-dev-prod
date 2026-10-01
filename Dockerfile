@@ -3,6 +3,11 @@ ARG NODE_VERSION=24
 FROM node:${NODE_VERSION}-slim AS base
 WORKDIR /app
 
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["node", "-e", "fetch(`http://localhost:${process.env.PORT}/health`).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+
 
 FROM base AS deps
 COPY package.json package-lock.json .npmrc ./
@@ -30,8 +35,6 @@ COPY src ./src
 
 USER node
 
-EXPOSE 3000
-
 CMD ["node_modules/.bin/tsx", "watch", "src/server.ts"]
 
 
@@ -43,10 +46,5 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 USER node
-
-EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD ["node", "-e", "fetch(`http://localhost:${process.env.PORT}/health`).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
 
 CMD ["node", "dist/server.js"]
