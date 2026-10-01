@@ -19,6 +19,22 @@ COPY src ./src
 RUN npm run build
 
 
+FROM base AS dev
+ENV NODE_ENV=development
+
+COPY package.json package-lock.json .npmrc ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+COPY tsconfig.json ./
+COPY src ./src
+
+USER node
+
+EXPOSE 3000
+
+CMD ["node_modules/.bin/tsx", "watch", "src/server.ts"]
+
+
 FROM base AS runner
 ENV NODE_ENV=production
 

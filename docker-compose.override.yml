@@ -1,0 +1,11 @@
+services:
+  api:
+    build:
+      target: dev
+    image: docker-dev-prod-api:dev
+    volumes:
+      - ./src:/app/src:ro
+
+  db:
+    ports:
+      - "${DB_PUBLISHED_PORT:-5435}:5432"
